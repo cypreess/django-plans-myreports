@@ -1,0 +1,27 @@
+<!doctype html>
+
+<html>
+<head>
+    <style>
+    @media all{
+        div.page {
+            page-break-after:always;
+        }
+
+        div.page:last-of-type{
+            page-break-after: auto;
+        }
+    }
+    </style>
+</head>
+<body>
+
+
+{% for invoice in object_list %}
+    <div class="page">
+    {% include "plans/invoices/PL_EN.html" with copy=1 %}
+    </div>
+{% endfor %}
+
+</body>
+</html>

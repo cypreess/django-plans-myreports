@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+    <style>
+        h1 {
+            font-size: 16px;
+        }
+        table {
+            width:  100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+
+        table td {
+            border:  1px solid black;
+            padding: .3em;
+            font-size: 13px;
+        }
+        table th {
+            background-color: lightgray;
+            border:  1px solid black;
+        }
+    </style>
+</head>
+<body>
+
+<h1>SPRZEDAŻ NIEUDOKUMENTOWANA ZA MIESIĄC {{ object.date|date:"m-Y" }}</h1>
+
+<div id="issuer">
+{{ object.issuer|linebreaksbr }}
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>L.p.</th>
+            <th>Data księgowania</th>
+            <th>Uwagi</th>
+            <th>Brutto (w tym 23% VAT)</th>
+        </tr>
+
+    </thead>
+    <tbody>
+    {% for element in object.elements %}
+        <tr>
+            <td style="text-align: right;">{{ element.sequence }}</td>
+            <td style="text-align: center;">{{ element.date|date:"d-m-Y" }}</td>
+            <td>{{ element.description }}</td>
+            <td style="text-align: right;">{{ element.total }} PLN</td>
+
+        </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+        <th colspan="3" style="text-align: right;">RAZEM:</th>
+        <th style="text-align: right;">{{ object.total }} PLN</th>
+    </tfoot>
+</table>
+
+</body>
+</html>
