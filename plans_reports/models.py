@@ -22,9 +22,26 @@ class InvoicedReport(models.Model):
         ordering = ('-date', '-created')
 
     def elements(self):
-        return InvoicedReportElement.objects.filter(report=self)
+        return InvoicedReportElement.objects.filter(report=self, non_invoiced=False)
+
+    def elements_non_invoiced(self):
+        return InvoicedReportElement.objects.filter(report=self, non_invoiced=True)
+
+    def total_netto(self):
+        return self.elements().exclude(tax=None).aggregate(Sum('total_net'))['total_net__sum']
+
+    def tax_total(self):
+        return self.elements().aggregate(Sum('tax_total'))['tax_total__sum']
+
+    def total_netto_np(self):
+        return self.elements().filter(tax=None).aggregate(Sum('total_net'))['total_net__sum']
+
+    def total(self):
+        return self.elements().aggregate(Sum('total'))['total__sum']
 
     def save(self, force_insert=False, force_update=False, using=None):
+
+
         if not self.issuer:
             issuer = settings.ISSUER_DATA
             self.issuer = u"%s\n%s\n%s %s\n%s" % (
@@ -50,26 +67,21 @@ class InvoicedReport(models.Model):
     def make_report(self):
         site_name = Site.objects.get_current().name
         seq = 1
-        glob_seq = 1
+        seq_non_invoiced = 1
 
-        if self.date.month != 1:
-            last_month = (self.date - relativedelta(months=1))
+        for invoice in Invoice.invoices.filter(issued__year=self.date.year, issued__month=self.date.month).order_by('number').select_related('order'):
 
+            non_invoiced = False
+            current_seq = seq
+            if invoice.issued.year != invoice.selling_date.year or invoice.issued.month != invoice.selling_date.month:
+                non_invoiced = True
+                current_seq = seq_non_invoiced
 
-            last_raport = InvoicedReport.objects.filter(date__year = last_month.year, date__month=last_month.month).order_by('-created')
-
-            print InvoicedReportElement.objects.filter(report=last_raport)
-
-        for invoice in Invoice.invoices.filter(issued__year=self.date.year, issued__month=self.date.month).order_by('number'):
-
-            # if invoice.issued.year != invoice.selling_date.year or invoice.issued.month != invoice.selling_date.month:
-            #     already_
 
 
             InvoicedReportElement.objects.create(
                 report = self,
-                global_sequence = glob_seq,
-                sequence = seq,
+                sequence = current_seq,
                 group = site_name,
                 invoice_number = invoice.full_number,
                 date_issued = invoice.issued,
@@ -81,9 +93,15 @@ class InvoicedReport(models.Model):
                 tax_total = invoice.tax_total,
                 tax = invoice.tax,
 
+                date_order = invoice.order.completed,
+                description = u"%s, zamówienie #%d" % (site_name, invoice.order.id),
+                non_invoiced = non_invoiced,
+
             )
-            seq += 1
-            glob_seq += 1
+            if non_invoiced:
+                seq_non_invoiced += 1
+            else:
+                seq += 1
 
 
     def __unicode__(self):
@@ -94,10 +112,14 @@ class InvoicedReport(models.Model):
 
 class InvoicedReportElement(models.Model):
     report = models.ForeignKey(InvoicedReport)
-    global_sequence = models.IntegerField(db_index=True)
     sequence = models.IntegerField(db_index=True)
     invoice_number = models.CharField(max_length=50)
     group = models.TextField()
+
+    date_order = models.DateField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+
+
     date_issued = models.DateField()
     date_sell = models.DateField()
     buyer = models.TextField()
@@ -108,7 +130,7 @@ class InvoicedReportElement(models.Model):
     tax = models.DecimalField(max_digits=4, decimal_places=2, db_index=True, null=True,
                               blank=True) # Tax=None is whet tax is not applicable
 
-
+    non_invoiced = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('sequence', )

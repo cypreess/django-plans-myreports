@@ -56,7 +56,6 @@
 <table>
     <thead>
     <tr>
-        <th>Poz.</th>
         <th>L.p.</th>
         <th>Numer dowodu</th>
         <th>Data wystawienia</th>
@@ -74,7 +73,6 @@
     <tbody>
     {% for element in object.elements %}
     <tr>
-        <td style="text-align: right;">{{ element.global_sequence }}</td>
         <td style="text-align: right;">{{ element.sequence }}</td>
         <td style="text-align: right;">{{ element.invoice_number }}</td>
         <td style="text-align: center;">{{ element.date_issued|date:"d-m-Y" }}</td>
@@ -91,13 +89,71 @@
     {% endfor %}
     </tbody>
     <tfoot>
-    <th colspan="8" style="text-align: right;">RAZEM:</th>
-    <th style="text-align: right;">{{ object.total }} PLN</th>
-    <th style="text-align: right;">{{ object.total }} PLN</th>
-    <th style="text-align: right;">{{ object.total }} PLN</th>
-    <th style="text-align: right;">{{ object.total }} PLN</th>
+    <th colspan="7" style="text-align: right;">RAZEM:</th>
+    <th style="text-align: right;">{{ object.total_netto|default:"0" }} PLN</th>
+    <th style="text-align: right;">{{ object.tax_total|default:"0" }} PLN</th>
+    <th style="text-align: right;">{{ object.total_netto_np|default:"0" }} PLN</th>
+    <th style="text-align: right;">{{ object.total|default:"0" }} PLN</th>
     </tfoot>
 </table>
+
+
+<h1>Rejestr faktur rozliczonych uprzednio w rejestrze sprzedaży nieewidencjonowanej</h1>
+
+
+<table>
+    <thead>
+    <tr>
+        <th>L.p.</th>
+        <th>Numer dowodu</th>
+
+        <th>Data księgowania</th>
+        <th>Uwagi</th>
+
+        <th>Data wystawienia</th>
+        <th>Data sprzedaży</th>
+
+        <th>Grupa</th>
+        <th>Kontrahent</th>
+        <th>Numer NIP</th>
+        <th>Netto 23%</th>
+        <th>VAT 23%</th>
+        <th>Netto n.p.</th>
+        <th>Brutto</th>
+    </tr>
+
+    </thead>
+    <tbody>
+    {% for element in object.elements_non_invoiced %}
+    <tr>
+        <td style="text-align: right;">{{ element.sequence }}</td>
+        <td style="text-align: right;">{{ element.invoice_number }}</td>
+
+        <td style="text-align: center;">{{ element.date_order|date:"d-m-Y" }}</td>
+        <td style="text-align: left;">{{ element.description }}</td>
+
+        <td style="text-align: center;">{{ element.date_issued|date:"d-m-Y" }}</td>
+        <td style="text-align: center;">{{ element.date_sell|date:"d-m-Y" }}</td>
+
+
+
+        <td style="text-align: center;">{{ element.group }}</td>
+        <td style="text-align: left;">{{ element.buyer }}</td>
+        <td style="text-align: center;">{{ element.buyer_tax_id }}</td>
+        <td style="text-align: right;">{% if element.tax != None %}{{ element.total_net }} PLN{% endif %}</td>
+        <td style="text-align: right;">{% if element.tax != None %}{{ element.tax_total }} PLN{% endif %}</td>
+        <td style="text-align: right;">{% if element.tax == None %}{{ element.total_net }} PLN{% endif %}</td>
+        <td style="text-align: right;">{{ element.total }} PLN</td>
+
+    </tr>
+    {% endfor %}
+    </tbody>
+
+</table>
+
+
+
+
 
 </body>
 </html>
