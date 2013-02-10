@@ -69,6 +69,8 @@ class InvoicedReport(models.Model):
         seq = 1
         seq_non_invoiced = 1
 
+        bulk_elements = []
+
         for invoice in Invoice.invoices.filter(issued__year=self.date.year, issued__month=self.date.month).order_by('number').select_related('order'):
 
             non_invoiced = False
@@ -79,7 +81,7 @@ class InvoicedReport(models.Model):
 
 
 
-            InvoicedReportElement.objects.create(
+            bulk_elements.append(InvoicedReportElement(
                 report = self,
                 sequence = current_seq,
                 group = site_name,
@@ -97,12 +99,13 @@ class InvoicedReport(models.Model):
                 description = u"%s, zamówienie #%d" % (site_name, invoice.order.id),
                 non_invoiced = non_invoiced,
 
-            )
+            ))
             if non_invoiced:
                 seq_non_invoiced += 1
             else:
                 seq += 1
 
+        InvoicedReportElement.objects.bulk_create(bulk_elements)
 
     def __unicode__(self):
         return u"Rejestr faktur VAT z miesiąca " + unicode(self.date.strftime('%Y-%m'))
@@ -187,11 +190,15 @@ class NonInvoicedReport(models.Model):
 
         site_name = Site.objects.get_current().name
 
+        bulk_elements = []
+
         seq = 1
-        for order in Order.objects.filter(status=Order.STATUS['COMPLETED'], completed__gte=start, completed__lt=end).order_by('id'):
+        for order in Order.objects.filter(status=Order.STATUS['COMPLETED'], completed__gte=start, completed__lt=end).prefetch_related('invoice_set').select_related('user').order_by('id'):
             if not filter(lambda i: i.type==Invoice.INVOICE_TYPES['INVOICE'] and i.issued.year == order.completed.year and i.issued.month == order.completed.month, order.invoice_set.all()):
-                NonInvoicedReportElement.objects.create(report=self, sequence=seq, date=order.completed.date(), description=u"%s, zamówienie #%d, konto '%s', %s" % (site_name, order.id, order.user.username, order.user.email), total=order.total())
+                bulk_elements.append(NonInvoicedReportElement(report=self, sequence=seq, date=order.completed.date(), description=u"%s, zamówienie #%d, konto '%s', %s" % (site_name, order.id, order.user.username, order.user.email), total=order.total()))
                 seq += 1
+
+        NonInvoicedReportElement.objects.bulk_create(bulk_elements)
 
 class NonInvoicedReportElement(models.Model):
     report = models.ForeignKey(NonInvoicedReport)
