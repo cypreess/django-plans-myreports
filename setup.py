@@ -21,4 +21,9 @@ setup(
         ],
     include_package_data=True,
     zip_safe=False,
+    package_data={
+        'plans_reports': [
+            'templates/plans_reports/*.html',
+            ],
+        }
     )
