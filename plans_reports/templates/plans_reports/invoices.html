@@ -1,7 +1,7 @@
-<!doctype html>
+{% extends 'plans/invoices/invoice_base.html' %}
 
-<html>
-<head>
+{% block head %}
+
     <style>
     @media all{
         div.page {
@@ -13,15 +13,15 @@
         }
     }
     </style>
-</head>
-<body>
 
+{% endblock %}
+
+{% block body %}
 
 {% for invoice in object_list %}
     <div class="page">
-    {% include "plans/invoices/PL_EN.html" with copy=1 %}
+    {% include "plans/invoices/PL_EN_layout.html" with copy=1 %}
     </div>
 {% endfor %}
 
-</body>
-</html>
+{% endblock %}
