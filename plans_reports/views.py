@@ -13,7 +13,7 @@ class InvoiceView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(InvoiceView, self).get_context_data(**kwargs)
-        context['logo_url'] = getattr(settings, 'INVOICE_LOGO_URL', None)
+        context['logo_url'] = getattr(settings, 'PLANS_INVOICE_LOGO_URL', None)
         return context
 
 
