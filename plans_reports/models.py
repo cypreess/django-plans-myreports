@@ -43,7 +43,7 @@ class InvoicedReport(models.Model):
 
 
         if not self.issuer:
-            issuer = settings.ISSUER_DATA
+            issuer = settings.PLANS_INVOICE_ISSUER
             self.issuer = u"%s\n%s\n%s %s\n%s" % (
                 issuer['issuer_name'],
                 issuer['issuer_street'],
@@ -161,7 +161,7 @@ class NonInvoicedReport(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None):
         if not self.issuer:
-            issuer = settings.ISSUER_DATA
+            issuer = settings.PLANS_INVOICE_ISSUER
             self.issuer = u"%s\n%s\n%s %s\n%s" % (
                 issuer['issuer_name'],
                 issuer['issuer_street'],
