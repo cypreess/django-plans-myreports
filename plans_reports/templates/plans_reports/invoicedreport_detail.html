@@ -31,28 +31,38 @@
             text-align: right;
         }
 
+    @media all{
+        div.page {
+            page-break-after:always;
+        }
+
+        div.page:last-of-type{
+            page-break-after: auto;
+        }
+    }
+
+
     </style>
 </head>
 <body>
 
+{% for group in object.elements %}
+<div class="page">
 <table id="head">
     <tr>
-        <td><h1>Rejestr VAT</h1>
+        <td><h1>GRUPA: "{{ group.name }}" - REJESTR VAT  - REJESTR SPRZEDAŻY ZA MIESIĄC {{ object.date|date:"m-Y" }}</h1>
             <div id="issuer">
                 {{ object.issuer|linebreaksbr }}
             </div>
         </td>
         <td>
-            <h1>Rejestr sprzedaży</h1>
 
-            <p>za miesiąc {{ object.date|date:"m-Y" }}</p>
 
 
         </td>
     </tr>
 </table>
-<p>Kontrahenci: Firmy+Osoby fiz. Transakcje: Sprzedaż+Korekty Wszystkie
-</p>
+
 <table>
     <thead>
     <tr>
@@ -71,34 +81,33 @@
 
     </thead>
     <tbody>
-    {% for element in object.elements %}
-    <tr>
-        <td style="text-align: right;">{{ element.sequence }}</td>
-        <td style="text-align: right;">{{ element.invoice_number }}</td>
-        <td style="text-align: center;">{{ element.date_issued|date:"d-m-Y" }}</td>
-        <td style="text-align: center;">{{ element.date_sell|date:"d-m-Y" }}</td>
-        <td style="text-align: center;">{{ element.group }}</td>
-        <td style="text-align: left;">{{ element.buyer }}</td>
-        <td style="text-align: center;">{{ element.buyer_tax_id }}</td>
-        <td style="text-align: right;">{% if element.tax != None %}{{ element.total_net }} PLN{% endif %}</td>
-        <td style="text-align: right;">{% if element.tax != None %}{{ element.tax_total }} PLN{% endif %}</td>
-        <td style="text-align: right;">{% if element.tax == None %}{{ element.total_net }} PLN{% endif %}</td>
-        <td style="text-align: right;">{{ element.total }} PLN</td>
-
-    </tr>
+    {% for element in group.invoiced %}
+            <tr>
+                <td style="text-align: right;">{{ element.sequence }}</td>
+                <td style="text-align: right;">{{ element.invoice_number }}</td>
+                <td style="text-align: center;">{{ element.date_issued|date:"d-m-Y" }}</td>
+                <td style="text-align: center;">{{ element.date_sell|date:"d-m-Y" }}</td>
+                <td style="text-align: center;">{{ element.group }}</td>
+                <td style="text-align: left;">{{ element.buyer }}</td>
+                <td style="text-align: center;">{{ element.buyer_tax_id }}</td>
+                <td style="text-align: right;">{% if element.tax != None %}{{ element.total_net }}&nbsp;PLN{% endif %}</td>
+                <td style="text-align: right;">{% if element.tax != None %}{{ element.tax_total }}&nbsp;PLN{% endif %}</td>
+                <td style="text-align: right;">{% if element.tax == None %}{{ element.total_net }}&nbsp;PLN{% endif %}</td>
+                <td style="text-align: right;">{{ element.total }} PLN</td>
+            </tr>
     {% endfor %}
     </tbody>
     <tfoot>
     <th colspan="7" style="text-align: right;">RAZEM:</th>
-    <th style="text-align: right;">{{ object.total_netto|default:"0" }} PLN</th>
-    <th style="text-align: right;">{{ object.tax_total|default:"0" }} PLN</th>
-    <th style="text-align: right;">{{ object.total_netto_np|default:"0" }} PLN</th>
-    <th style="text-align: right;">{{ object.total|default:"0" }} PLN</th>
+    <th style="text-align: right;">{{ group.invoiced_sum_net|default:"0" }}&nbsp;PLN</th>
+    <th style="text-align: right;">{{ group.invoiced_sum_tax|default:"0" }}&nbsp;PLN</th>
+    <th style="text-align: right;">{{ group.invoiced_sum_net_na|default:"0" }}&nbsp;PLN</th>
+    <th style="text-align: right;">{{ group.invoiced_sum_total|default:"0" }}&nbsp;PLN</th>
     </tfoot>
 </table>
 
 
-<h1>Rejestr faktur rozliczonych uprzednio w rejestrze sprzedaży nieudokumentowanej</h1>
+<h1>GRUPA: "{{ group.name }}" - REJESTR FAKTUR ZA MIESIĄC {{ object.date|date:"m-Y" }} ROZLICZONYCH UPRZEDNIO W REJESTRZE SPRZEDAŻY NIEUDOKUMENTOWANEJ</h1>
 
 
 <table>
@@ -124,33 +133,35 @@
 
     </thead>
     <tbody>
-    {% for element in object.elements_non_invoiced %}
-    <tr>
-        <td style="text-align: right;">{{ element.sequence }}</td>
-        <td style="text-align: right;">{{ element.invoice_number }}</td>
-
-        <td style="text-align: center;">{{ element.date_order|date:"d-m-Y" }}</td>
-        <td style="text-align: left;">{{ element.description }}</td>
-
-        <td style="text-align: center;">{{ element.date_issued|date:"d-m-Y" }}</td>
-        <td style="text-align: center;">{{ element.date_sell|date:"d-m-Y" }}</td>
-
-
-
-        <td style="text-align: center;">{{ element.group }}</td>
-        <td style="text-align: left;">{{ element.buyer }}</td>
-        <td style="text-align: center;">{{ element.buyer_tax_id }}</td>
-        <td style="text-align: right;">{% if element.tax != None %}{{ element.total_net }} PLN{% endif %}</td>
-        <td style="text-align: right;">{% if element.tax != None %}{{ element.tax_total }} PLN{% endif %}</td>
-        <td style="text-align: right;">{% if element.tax == None %}{{ element.total_net }} PLN{% endif %}</td>
-        <td style="text-align: right;">{{ element.total }} PLN</td>
-
-    </tr>
+    {% for element in group.noninvoiced %}
+            <tr>
+                <td style="text-align: right;">{{ element.sequence }}</td>
+                <td style="text-align: right;">{{ element.invoice_number }}</td>
+                <td style="text-align: center;">{{ element.date_order|date:"d-m-Y" }}</td>
+                <td style="text-align: left;">{{ element.description }}</td>
+                <td style="text-align: center;">{{ element.date_issued|date:"d-m-Y" }}</td>
+                <td style="text-align: center;">{{ element.date_sell|date:"d-m-Y" }}</td>
+                <td style="text-align: center;">{{ element.group }}</td>
+                <td style="text-align: left;">{{ element.buyer }}</td>
+                <td style="text-align: center;">{{ element.buyer_tax_id }}</td>
+                <td style="text-align: right;">{% if element.tax != None %}{{ element.total_net }}&nbsp;PLN{% endif %}</td>
+                <td style="text-align: right;">{% if element.tax != None %}{{ element.tax_total }}&nbsp;PLN{% endif %}</td>
+                <td style="text-align: right;">{% if element.tax == None %}{{ element.total_net }}&nbsp;PLN{% endif %}</td>
+                <td style="text-align: right;">{{ element.total }}&nbsp;PLN</td>
+            </tr>
     {% endfor %}
+    <tfoot>
+    <th colspan="9" style="text-align: right;">RAZEM:</th>
+    <th style="text-align: right;">{{ group.noninvoiced_sum_net|default:"0" }}&nbsp;PLN</th>
+    <th style="text-align: right;">{{ group.noninvoiced_sum_tax|default:"0" }}&nbsp;PLN</th>
+    <th style="text-align: right;">{{ group.noninvoiced_sum_net_na|default:"0" }}&nbsp;PLN</th>
+    <th style="text-align: right;">{{ group.noninvoiced_sum_total|default:"0" }}&nbsp;PLN</th>
+    </tfoot>
     </tbody>
 
 </table>
-
+</div>
+{% endfor %}
 
 
 
